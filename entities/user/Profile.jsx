@@ -13,7 +13,7 @@ import {
   IconButton,
   Center,
 } from '@chakra-ui/react';
-import { SmallCloseIcon } from '@chakra-ui/icons';
+import { EditIcon, SmallCloseIcon } from '@chakra-ui/icons';
 
 export default function UserProfileEdit(){
   return (
@@ -31,7 +31,7 @@ export default function UserProfileEdit(){
         boxShadow={'lg'}
         p={6}
         my={12}>
-        <Heading lineHeight={1.1} fontSize={{ base: '2xl', sm: '3xl' }}>
+        <Heading lineHeight={1.1} fontSize={{ base: '2xl', sm: '3xl' }} justifyContent={'center'}>
           User Profile Edit
         </Heading>
         <FormControl id="userName">
@@ -44,14 +44,14 @@ export default function UserProfileEdit(){
                   size="sm"
                   rounded="full"
                   top="-10px"
-                  colorScheme="red"
+                  colorScheme="green"
                   aria-label="remove Image"
-                  icon={<SmallCloseIcon />}
+                  icon={<EditIcon />}
                 />
               </Avatar>
             </Center>
             <Center w="full">
-              <Button w="full">Change Icon</Button>
+              <Button w="full">Edit Profile</Button>
             </Center>
           </Stack>
         </FormControl>
@@ -71,14 +71,6 @@ export default function UserProfileEdit(){
             type="email"
           />
         </FormControl>
-        <FormControl id="password" isRequired>
-          <FormLabel>Password</FormLabel>
-          <Input
-            placeholder="password"
-            _placeholder={{ color: 'gray.500' }}
-            type="password"
-          />
-        </FormControl>
         <Stack spacing={6} direction={['column', 'row']}>
           <Button
             bg={'red.400'}
@@ -90,13 +82,13 @@ export default function UserProfileEdit(){
             Cancel
           </Button>
           <Button
-            bg={'blue.400'}
+            bg={'green.400'}
             color={'white'}
             w="full"
             _hover={{
-              bg: 'blue.500',
+              bg: 'green.500',
             }}>
-            Submit
+            Save
           </Button>
         </Stack>
       </Stack>
