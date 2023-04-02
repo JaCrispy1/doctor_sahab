@@ -92,6 +92,7 @@ function App() {
           path: "/manager/appointments",
           element: <Appointments />,
         },
+        
       ],
     },
   ]);

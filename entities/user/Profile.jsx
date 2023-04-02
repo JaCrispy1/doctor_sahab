@@ -31,11 +31,10 @@ export default function UserProfileEdit(){
         boxShadow={'lg'}
         p={6}
         my={12}>
-        <Heading lineHeight={1.1} fontSize={{ base: '2xl', sm: '3xl' }} justifyContent={'center'}>
-          User Profile Edit
+        <Heading lineHeight={3.1} fontSize={{ base: '2xl', sm: '3xl' }} justifyContent={'center'}>
+          Gaurav Thapaliya
         </Heading>
         <FormControl id="userName">
-          <FormLabel>User Icon</FormLabel>
           <Stack direction={['column', 'row']} spacing={6}>
             <Center>
               <Avatar size="xl" src="https://bit.ly/sage-adebayo">
@@ -67,6 +66,14 @@ export default function UserProfileEdit(){
           <FormLabel>Email address</FormLabel>
           <Input
             placeholder="your-email@example.com"
+            _placeholder={{ color: 'gray.500' }}
+            type="email"
+          />
+        </FormControl>
+        <FormControl id="email" isRequired>
+          <FormLabel>Blood Group</FormLabel>
+          <Input
+            placeholder="B+"
             _placeholder={{ color: 'gray.500' }}
             type="email"
           />
