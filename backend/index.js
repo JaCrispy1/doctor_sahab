@@ -2,6 +2,8 @@ const express = require("express");
 const { json } = require("body-parser");
 const authRoute = require("./routes/auth");
 const app = express();
+const managerRoute = require("./routes/manager");
+
 const cors = require("cors");
 const { connect } = require("mongoose");
 app.use(json());
@@ -16,6 +18,7 @@ connect(process.env.CONNECT, () => {
 
 // Route MiddleWare
 app.use("/api/user", authRoute);
+app.use("/api/manager", managerRoute);
 
 app.get("/api", (req, res) => {
   res.json({
