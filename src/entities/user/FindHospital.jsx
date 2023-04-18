@@ -103,6 +103,8 @@ const FindHostpital = () => {
               speciality={hospital.speciality}
               city={hospital.city}
               phone={hospital.phone}
+              latitude={hospital.lat}
+              longitude={hospital.long}
             />
           );
         })}

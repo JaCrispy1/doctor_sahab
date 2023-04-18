@@ -20,21 +20,24 @@ export default function UserProfileEdit(){
   const phone = localStorage.getItem('phone') ? localStorage.getItem('phone') : null;
   const [userData, setUserData] = useState({});
 
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try{
-  //       const response = await fetch("http://localhost:3000/api/user/data/"+phone);
-  //       const data = await response.json();
-  //       setUserData(data);
-  //       console.log(data);
-  //     }
-  //     catch(err){
-  //       console.log("hrlllo");
-  //       console.log(err);
-  //     }
-  //   }
-  //   fetchUser();
-  // }, []);
+  useEffect(() => {
+    if(phone === null){
+      return;
+    }
+    const fetchUser = async () => {
+      try{
+        const response = await fetch(`http://localhost:3000/api/user/data/${phone}`);
+        const data = await response.json();
+        console.log(data)
+        setUserData(data);
+
+      }
+      catch(err){
+        console.log(err);
+      }
+    }
+    fetchUser();
+  }, []);
 
   return (
     <Flex
@@ -52,9 +55,7 @@ export default function UserProfileEdit(){
         p={6}
         my={12}>
         <Heading lineHeight={3.1} fontSize={{ base: '2xl', sm: '3xl' }} justifyContent={'center'}>
-          {/* {
-            userData.user.name
-          } */}
+          
         </Heading>
         <FormControl id="userName">
           <Stack direction={['column', 'row']} spacing={6}>
@@ -82,6 +83,7 @@ export default function UserProfileEdit(){
             placeholder="UserName"
             _placeholder={{ color: 'gray.500' }}
             type="text"
+      
            
           />
         </FormControl>
@@ -92,6 +94,7 @@ export default function UserProfileEdit(){
             _placeholder={{ color: 'gray.500' }}
             type="email"
           
+
           />
         </FormControl>
         <FormControl id="email" isRequired>

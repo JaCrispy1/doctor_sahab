@@ -3,27 +3,29 @@ const Hospital = require("../model/Hospital");
 const { ObjectId } = require("mongodb");
 const Doctor = require("../model/Doctor");
 require("dotenv").config();
+const nodemailer = require("nodemailer");
+const MailOtp = require("../model/MailOtp");
 
-router.post("/createHospital", async (req, res) => {
-  const { name, phone, speciality, city, address } = req.body;
-  if (!name || !phone || !speciality || !city || !address) {
-    return res.status(400).json({ message: "Please fill all the fields" });
-  }
-  const newHospital = new Hospital({
-    name: name,
-    phone: phone,
-    speciality: speciality,
-    city: city,
-    address: address,
-  });
-  try {
-    await newHospital.save();
-    res.status(200).json({ message: "Hospital Created" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
+// router.post("/createHospital", async (req, res) => {
+//   const { name, phone, speciality, city, address } = req.body;
+//   if (!name || !phone || !speciality || !city || !address) {
+//     return res.status(400).json({ message: "Please fill all the fields" });
+//   }
+//   const newHospital = new Hospital({
+//     name: name,
+//     phone: phone,
+//     speciality: speciality,
+//     city: city,
+//     address: address,
+//   });
+//   try {
+//     await newHospital.save();
+//     res.status(200).json({ message: "Hospital Created" });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// });
 
 router.get("/getSpeciality/:id", async (req, res) => {
   try {
@@ -90,6 +92,7 @@ router.post("/createDoctor", async (req, res) => {
     qualification,
     hospital,
     available,
+    fees,
   } = req.body;
   if (
     !name ||
@@ -99,7 +102,8 @@ router.post("/createDoctor", async (req, res) => {
     !speciality ||
     !qualification ||
     !hospital ||
-    !available
+    !available ||
+    !fees
   ) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
@@ -111,6 +115,7 @@ router.post("/createDoctor", async (req, res) => {
     speciality: speciality,
     qualification: qualification,
     hospital: hospital,
+    fees: fees,
     available: available,
   });
   try {
@@ -238,6 +243,27 @@ router.get("/getHospitalSpeciality/:id", async (req, res) => {
   }
 });
 
+router.patch("/updateHospitalSpeciality/:id", async (req, res) => {
+  const id = req.params.id;
+  const { hospitalId, name, description } = req.body;
+  try {
+    const hospital = await Hospital.findOne({ _id: ObjectId(hospitalId) });
+    if (!hospital) {
+      return res.status(400).json({ message: "Hospital not found" });
+    }
+    const index = hospital.speciality.findIndex(
+      (item) => item._id.toString() === id
+    );
+    hospital.speciality[index].name = name;
+    hospital.speciality[index].description = description;
+    await hospital.save();
+    res.status(200).json({ message: "Speciality Updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 router.delete("/deleteHospitalSpeciality/:id", async (req, res) => {
   const id = req.params.id;
   const { hospitalId } = req.body;
@@ -252,6 +278,80 @@ router.delete("/deleteHospitalSpeciality/:id", async (req, res) => {
     hospital.speciality.splice(index, 1);
     await hospital.save();
     res.status(200).json({ message: "Speciality Deleted" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.post("/sendOTP", async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Please enter your phone number" });
+  }
+  const otp = Math.floor(1000 + Math.random() * 9000);
+  const message = `Your OTP is ${otp}`;
+  console.log(message);
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.APP_EMAIL,
+        pass: process.env.APP_KEY,
+      },
+    });
+    const info = await transporter.sendMail({
+      from: "Hospital Management System",
+      to: email,
+      subject: "OTP",
+      text: message,
+    });
+
+    const mail = new MailOtp({
+      email: email,
+      otp: otp,
+      expireAt: Date.now() + 300000,
+    });
+    await mail.save();
+
+    res.status(200).json({ otp: otp });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  const { email, password, otp } = req.body;
+  console.log(req.body);
+  if (!email || !password || !otp) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
+  try {
+    const hospital = await Hospital.findOne({
+      email: email,
+      password: password,
+    });
+
+    if (!hospital) {
+      return res.status(400).json({ message: "Invalid Credentials" });
+    }
+
+    const otp = await MailOtp.findOne({
+      email: email,
+    });
+
+    if (!otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (otp.expireAt > Date.now()) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Login Successful", hospital: hospital });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });

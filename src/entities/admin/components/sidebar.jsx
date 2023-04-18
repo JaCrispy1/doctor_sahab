@@ -19,7 +19,6 @@ import {
   MenuDivider,
   MenuItem,
   MenuList,
-  Image,
 } from "@chakra-ui/react";
 import {
   FiHome,
@@ -31,24 +30,15 @@ import {
   FiBell,
   FiChevronDown,
 } from "react-icons/fi";
-import { GrUserExpert } from "react-icons/gr";
-
-import logo from "../../../assets/logo.png";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
+import { AddIcon } from "@chakra-ui/icons";
 
 const LinkItems = [
-  { name: "Manage Doctor", icon: FiTrendingUp, link: "/manager/" },
-  { name: "Appointments", icon: FiCompass, link: "/manager/appointments" },
-  { name: "History", icon: FiStar, link: "/manager/history" },
-  {
-    name: "Specialities",
-    icon: GrUserExpert,
-    link: "/manager/speciality",
-  },
+  { name: "Home", icon: FiHome, path: "/admin" },
+  { name: "Add Manager", icon: AddIcon,  path: "/admin/addManager" },
 ];
 
-export default function Sidebar(props) {
-  const naigate = useNavigate();
+export default function AdminSidebar({ children }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   return (
     <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
@@ -91,11 +81,13 @@ const SidebarContent = ({ onClose, ...rest }) => {
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Image src={logo} w={"150px"} height={"70px"} />
+        <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
+          Logo
+        </Text>
         <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
       {LinkItems.map((link) => (
-        <NavItem as={NavLink} key={link.name} icon={link.icon} to={link.link}>
+        <NavItem key={link.name} icon={link.icon} as={NavLink} to={link.path}>
           {link.name}
         </NavItem>
       ))}
@@ -106,7 +98,6 @@ const SidebarContent = ({ onClose, ...rest }) => {
 const NavItem = ({ icon, children, ...rest }) => {
   return (
     <Link
-      href="#"
       style={{ textDecoration: "none" }}
       _focus={{ boxShadow: "none" }}
     >
@@ -140,7 +131,6 @@ const NavItem = ({ icon, children, ...rest }) => {
 };
 
 const MobileNav = ({ onOpen, ...rest }) => {
-  const navigate = useNavigate();
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -193,7 +183,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
                   ml="2"
                 >
                   <Text fontSize="xs" color="gray.600">
-                    {"Manager"}
+                    Admin
                   </Text>
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
@@ -205,14 +195,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               bg={useColorModeValue("white", "gray.900")}
               borderColor={useColorModeValue("gray.200", "gray.700")}
             >
-              <MenuItem
-                onClick={() => {
-                  localStorage.removeItem("manager");
-                  navigate("/manager/login");
-                }}
-              >
-                Sign out
-              </MenuItem>
+              <MenuItem onClick={() => {}}>Sign out</MenuItem>
             </MenuList>
           </Menu>
         </Flex>

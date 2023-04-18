@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { Box, chakra, Flex, Icon, Image } from "@chakra-ui/react";
 import { BsFillBriefcaseFill } from "react-icons/bs";
+import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 const HospitalDetails = (props) => {
   console.log(props);
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: "AIzaSyC7D1kQPyLU2FEE0kUARIfibjyuxzny21I",
+  });
+
   return (
     <Flex
       py={50}
@@ -29,7 +35,7 @@ const HospitalDetails = (props) => {
           h={56}
           fit="cover"
           objectPosition="center"
-          src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80"
+          src={props.details.image}
           alt="avatar"
         />
 
@@ -74,6 +80,12 @@ const HospitalDetails = (props) => {
               {props.details.city}
             </chakra.h1>
           </Flex>
+          <Flex alignItems={"center"} mt={4}>
+            <Icon h={6} w={6} mr={2} />
+            <chakra.h1 px={2} fontSize="sm">
+              {props.details.phone}
+            </chakra.h1>
+          </Flex>
           <Flex
             alignItems="center"
             mt={4}
@@ -81,12 +93,28 @@ const HospitalDetails = (props) => {
             _dark={{
               color: "gray.200",
             }}
+            flexDirection={"column"}
           >
-            <Icon h={6} w={6} mr={2} />
-
-            <chakra.h1 px={2} fontSize="sm">
-              {props.details.phone}
-            </chakra.h1>
+            {isLoaded && (
+              <GoogleMap
+                mapContainerStyle={{
+                  width: "320px",
+                  height: "300px",
+                }}
+                center={{
+                  lat: parseFloat(props.details.latitude),
+                  lng: parseFloat(props.details.longitude),
+                }}
+                zoom={10}
+              >
+                <Marker
+                  position={{
+                    lat: parseFloat(props.details.latitude),
+                    lng: parseFloat(props.details.longitude),
+                  }}
+                />
+              </GoogleMap>
+            )}
           </Flex>
         </Box>
       </Box>

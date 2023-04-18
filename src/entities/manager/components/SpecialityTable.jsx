@@ -35,6 +35,7 @@ import { BsFillTrashFill } from "react-icons/bs";
 import { SearchIcon } from "@chakra-ui/icons";
 
 const SpecailityTable = () => {
+  const id = localStorage.getItem("manager");
   const data = [
     {
       name: "Daggy",
@@ -165,19 +166,21 @@ const SpecailityTable = () => {
   const [search, setSearch] = useState(null);
   const [specialityName, setspecialityName] = useState("");
   const [specialityDescription, setSpecialityDescription] = useState("");
-  const [specialityData, setSpecialityData] = useState(null);
+  const [specialityData, setSpecialityData] = useState([]);
+  const [editDoctor, setEditDoctor] = useState({
+    name: "",
+    description: "",
+  });
 
   const [doctor, setDoctor] = useState(null);
-  const [doctorData, setDoctorData] = useState(null);
 
   useEffect(() => {
     const getSpecialityData = async () => {
       await fetch(
-        "http://localhost:3000/api/manager/getHospitalSpeciality/640c1b8ee6a03542520045c0"
+        `http://localhost:3000/api/manager/getHospitalSpeciality/${id}`
       )
         .then((res) => res.json())
         .then((data) => {
-          console.log(data.speciality);
           setSpecialityData(data.speciality);
         })
         .catch((err) => {
@@ -185,12 +188,11 @@ const SpecailityTable = () => {
         });
     };
     getSpecialityData();
-    console.log(specialityData);
   }, [doctor]);
 
   const addCategory = async () => {
     const data = {
-      hospitalId: "640c1b8ee6a03542520045c0",
+      hospitalId: id,
       name: specialityName,
       description: specialityDescription,
     };
@@ -221,7 +223,7 @@ const SpecailityTable = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ hospitalId: "640c1b8ee6a03542520045c0" }),
+        body: JSON.stringify({ hospitalId: id }),
       }
     )
       .then((res) => res.json())
@@ -232,6 +234,29 @@ const SpecailityTable = () => {
       .catch((err) => {
         console.log(err);
       });
+  };
+
+  const editHospitalSpeciality = async (id) => {
+    const data = {
+      hospitalId: id,
+      name: editDoctor.name,
+      description: editDoctor.description,
+    };
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/manager/updateHospitalSpeciality/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      setDoctor((doctor) => !doctor);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const onChangeHandler = (text) => {
@@ -269,7 +294,7 @@ const SpecailityTable = () => {
             borderColor={"gray.200"}
           >
             <Text fontSize={"25px"} textTransform={"uppercase"}>
-              Add Doctor
+              Add Speciality
             </Text>
           </ModalHeader>
           <ModalCloseButton />
@@ -342,119 +367,44 @@ const SpecailityTable = () => {
             borderColor={"gray.200"}
           >
             <Text fontSize={"25px"} textTransform={"uppercase"}>
-              Edit Doctor
+              Edit Speciality
             </Text>
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6} display={"flex"} flexDirection={"column"} gap={5}>
-            <HStack>
+            <VStack>
               <FormControl isRequired>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Speciality Name</FormLabel>
                 <Input
                   onChange={(e) => {
-                    setDoctorData(() => {
+                    setEditDoctor(() => {
                       return {
-                        ...doctorData,
+                        ...editDoctor,
                         name: e.target.value,
                       };
                     });
                   }}
-                  placeholder="Enter full name"
-                  value={doctorData?.name}
+                  value={editDoctor.name}
+                  placeholder="Enter Speciality"
                 />
               </FormControl>
 
               <FormControl mt={4} isRequired>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel> Enter Description</FormLabel>
                 <Input
-                  placeholder="Enter your number"
+                  placeholder="Description"
                   onChange={(e) => {
-                    setDoctorData(() => {
+                    setEditDoctor(() => {
                       return {
-                        ...doctorData,
-                        phone: e.target.value,
+                        ...editDoctor,
+                        description: e.target.value,
                       };
                     });
                   }}
-                  value={doctorData?.phone}
+                  value={editDoctor.description}
                 />
               </FormControl>
-            </HStack>
-            <HStack>
-              <FormControl isRequired>
-                <FormLabel> NMC Number</FormLabel>
-                <Input
-                  onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        NMC: e.target.value,
-                      };
-                    });
-                  }}
-                  placeholder="Enter your NMC no"
-                  value={doctorData?.NMC}
-                />
-              </FormControl>
-
-              <FormControl mt={4} isRequired>
-                <FormLabel>Experience Year</FormLabel>
-                <Input
-                  placeholder="Enter your experienced year"
-                  onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        experience: e.target.value,
-                      };
-                    });
-                  }}
-                  value={doctorData?.experience}
-                />
-              </FormControl>
-            </HStack>
-            <HStack>
-              <FormControl isRequired>
-                <FormLabel>Speciality</FormLabel>
-                <Select
-                  placeholder="Select option"
-                  bg={"white"}
-                  onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        speciality: e.target.value,
-                      };
-                    });
-                  }}
-                  value={doctorData?.speciality}
-                >
-                  {speciality.map((item) => {
-                    return (
-                      <option key={item.id} value={item.name}>
-                        {item.name}
-                      </option>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-
-              <FormControl mt={4} isRequired>
-                <FormLabel>Qualification</FormLabel>
-                <Input
-                  placeholder="Enter your qualification"
-                  onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        qualification: e.target.value,
-                      };
-                    });
-                  }}
-                  value={doctorData?.qualification}
-                />
-              </FormControl>
-            </HStack>
+            </VStack>
           </ModalBody>
 
           <ModalFooter
@@ -482,7 +432,7 @@ const SpecailityTable = () => {
               }}
               colorScheme="blue"
               onClick={() => {
-                editDoctor(doctorData._id);
+                editHospitalSpeciality(editDoctor._id);
                 onEditClose();
               }}
             >
@@ -503,23 +453,6 @@ const SpecailityTable = () => {
       >
         <Flex my={50} w={"full"} justifyContent={"space-between"} gap={5}>
           <Flex w={"full"} gap={2}>
-            {/* <Flex w={"250px"}>
-              <Select
-                placeholder="Select option"
-                bg={"white"}
-                onChange={(e) => {
-                  onChangeHandler(e.currentTarget.value);
-                }}
-              >
-                {speciality.map((item) => {
-                  return (
-                    <option key={item.id} value={item.name}>
-                      {item.name}
-                    </option>
-                  );
-                })}
-              </Select>
-            </Flex> */}
             <Flex w={"700px"}>
               <InputGroup bg={"white"} rounded={"md"}>
                 <InputLeftElement
@@ -624,6 +557,14 @@ const SpecailityTable = () => {
                           icon={<AiFillEdit />}
                           aria-label="Edit"
                           onClick={() => {
+                            setEditDoctor(() => {
+                              return {
+                                ...editDoctor,
+                                _id: token._id,
+                                name: token.name,
+                                description: token.description,
+                              };
+                            });
                             onEditOpen();
                           }}
                         />

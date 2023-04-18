@@ -34,27 +34,52 @@ import {
 import { Outlet, useNavigate, Link as ToLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Footer from "./Footer";
+import { FiBell } from "react-icons/fi";
 
 export default function Navbar() {
   const { isOpen, onToggle } = useDisclosure();
-  const phone = localStorage.getItem("phone") ? localStorage.getItem("phone") : null;
+  const [notice, setNotice] = useState([]);
+  const phone = localStorage.getItem("phone")
+    ? localStorage.getItem("phone")
+    : null;
   const navigate = useNavigate();
   const [name, setName] = useState();
 
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try{
-  //       const response = await fetch(`http://localhost:3000/api/user/data/${phone}`);
-  //       const data = await response.json();
-  //       setName(data.user.name.split(" ")[0]);
-  //       console.log(data)
-  //     }
-  //     catch(err){
-  //       console.log(err);
-  //     }
-  //   }
-  //   fetchUser();
-  // }, []);
+  useEffect(() => {
+    if (phone === null) {
+      return;
+    }
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/user/getNotice/${phone}`
+        );
+        const data = await response.json();
+        console.log(data.data);
+        setNotice([...data.data]);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (phone === null) {
+      return;
+    }
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/user/data/${phone}`
+        );
+        const data = await response.json();
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   return (
     <>
@@ -101,6 +126,28 @@ export default function Navbar() {
             direction={"row"}
             alignItems={"center"}
           >
+            <Menu>
+              {phone !== null ? (
+                <MenuButton as={Button} rightIcon={<FiBell />} />
+              ) : (
+                <></>
+              )}
+              <MenuList>
+                {notice.map((not) => (
+                  <>
+                    <Flex direction={"column"} p={5}>
+                      <Text fontSize={"lg"} fontWeight={600} ml={2}>
+                        Token : {not.token}
+                      </Text>
+                      <Text fontSize={"lg"} fontWeight={600} ml={2}>
+                        Alloted Time : {not.alloted}
+                      </Text>
+                    </Flex>
+                    <MenuDivider />
+                  </>
+                ))}
+              </MenuList>
+            </Menu>
             <Button
               fontSize={"16px"}
               fontWeight={700}
@@ -143,28 +190,34 @@ export default function Navbar() {
 
             {phone !== null && (
               <Flex alignItems={"center"} gap={3} px={5}>
-              <Menu isLazy>
-              <Flex alignItems={"center"}>
-                <Avatar as={MenuButton} size={"md"} />
-                <Text  fontSize={"lg"} fontWeight={600} ml={2}></Text>
-              </Flex>
-              <MenuList>
-                {/* MenuItems are not rendered unless Menu is open */}
-                <MenuItem onClick={
-                  () => {
-                    navigate("/profile");
-                  }
-                }>My Account </MenuItem>
-               
-                <MenuItem onClick={
-                  () => {
-                    localStorage.removeItem("phone");
-                    navigate("/login");
-                  }
-                }>Logout</MenuItem>
-              </MenuList>
-            </Menu>
-                
+                <Menu isLazy>
+                  <Flex alignItems={"center"}>
+                    <Avatar as={MenuButton} size={"md"} />
+                    <Text fontSize={"lg"} fontWeight={600} ml={2}>
+                      {" "}
+                      {name}{" "}
+                    </Text>
+                  </Flex>
+                  <MenuList>
+                    {/* MenuItems are not rendered unless Menu is open */}
+                    <MenuItem
+                      onClick={() => {
+                        navigate("/profile");
+                      }}
+                    >
+                      My Account{" "}
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={() => {
+                        localStorage.removeItem("phone");
+                        navigate("/login");
+                      }}
+                    >
+                      Logout
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
               </Flex>
             )}
           </Stack>

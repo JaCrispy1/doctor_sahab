@@ -36,6 +36,10 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  fees: {
+    type: String,
+    required: true,
+  },
   available: [
     {
       id: {

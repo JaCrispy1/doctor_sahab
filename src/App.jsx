@@ -20,6 +20,11 @@ import Specialist from "./entities/user/Specialist";
 import Specialities from "./entities/manager/Specialities";
 import ManagerLogin from "./entities/manager/ManagerLogin";
 import Checkout from "./entities/user/Checkout";
+import AdminLogin from "./entities/admin/adminlogin";
+import AdminSidebar from "./entities/admin/components/sidebar";
+import AdminDashboard from "./entities/admin/dashboard";
+import HistoryPage from "./entities/manager/HistoryPage";
+import AddManager from "./entities/admin/addManager";
 
 function App() {
   const route = useRoutes([
@@ -72,7 +77,7 @@ function App() {
         },
         {
           path: "/profile",
-          element: <AuthRoute NextComponent={<Profile/>}/>,
+          element: <AuthRoute NextComponent={<Profile />} />,
         },
         {
           path: "/specialist/",
@@ -103,13 +108,34 @@ function App() {
           path: "/manager/speciality",
           element: <Specialities />,
         },
+        {
+          path: "/manager/history",
+          element: <HistoryPage />,
+        },
       ],
     },
     {
       path: "manager/login",
       element: <ManagerLogin />,
-    }
-  ]); 
+    },
+    {
+      path: "admin/login",
+      element: <AdminLogin />,
+    },
+    {
+      element: <AdminSidebar />,
+      children: [
+        {
+          path: "/admin",
+          element: <AdminDashboard />,
+        },
+        {
+          path: "/admin/addManager",
+          element: <AddManager />,
+        },
+      ],
+    },
+  ]);
 
   return route;
 }
