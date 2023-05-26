@@ -28,6 +28,7 @@ import {
   FormLabel,
   HStack,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { AiFillEdit } from "react-icons/ai";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -39,6 +40,7 @@ const AddManager = () => {
   const bg2 = useColorModeValue("white", "gray.800");
   const bg3 = useColorModeValue("gray.100", "gray.700");
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   const {
     isOpen: isEditOpen,
     onOpen: onEditOpen,
@@ -55,45 +57,44 @@ const AddManager = () => {
   const [doctor, setDoctor] = useState(true);
   const [doctorData, setDoctorData] = useState(null);
   const [specailityHospital, setSpecialityHospital] = useState([]);
+  const [temp, setTemp] = useState([]);
   const [background, setBackground] = useState("");
   const [password, setPassword] = useState("");
   const [image, setImage] = useState();
   const [city, setCity] = useState();
+  const [EditData, setEditData] = useState({});
 
-  
+  const toast = useToast();
+
+  const getSpecialityData = async () => {
+    await fetch("http://localhost:3000/api/manager/getHospitals")
+      .then((res) => res.json())
+      .then((data) => {
+        setSpecialityData([...data.hospitals]);
+        setTemp([...data.hospitals]);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   useEffect(() => {
-    const getSpecialityData = async () => {
-      await fetch(
-        "http://localhost:3000/api/manager/getHospitals"
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setSpecialityData([...data.hospitals]);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
-
-    getSpecialityData();
-  }, [doctor]);
-
-  useEffect(() => {
-    const getSpecialityData = async () => {
-      await fetch(
-        "http://localhost:3000/api/manager/getHospitals"
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data.hospitals);
-          setSpecialityHospital([...data.hospitals]);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
     getSpecialityData();
   }, []);
+  // const getSpecialityData = async () => {
+  //   await fetch("http://localhost:3000/api/manager/getHospitals")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       console.log(data.hospitals);
+  //       setSpecialityHospital([...data.hospitals]);
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // };
+
+  // useEffect(() => {
+  //   getSpecialityData();
+  // }, []);
 
   const onChangeHandler = (text) => {
     setSearch(text);
@@ -107,24 +108,56 @@ const AddManager = () => {
     // );
   };
 
-
-
- 
+  const deleteHospital = async (id) => {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/admin/deleteHospital/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await res.json();
+      toast({
+        title: "Hospital Deleted.",
+        description: "Hospital has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      getSpecialityData();
+    } catch (err) {
+      toast({
+        title: "Hospital Deleted.",
+        description: "Hospital has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const addHospital = async () => {
-    const formData = new FormData();
-    formData.append("file", image);
-    formData.append("upload_preset", "lef6u6wv");
-    const requestConfig = {
-      url: `https://api.cloudinary.com/v1_1/ddrleopwg/image/upload`,
-      method: "POST",
-      body: formData,
-    };
-
     try {
+      const formData = new FormData();
+      formData.append("file", image);
+      formData.append("upload_preset", "lef6u6wv");
+      const requestConfig = {
+        url: `https://api.cloudinary.com/v1_1/ddrleopwg/image/upload`,
+        method: "POST",
+        body: formData,
+      };
       const response = await fetch(requestConfig.url, requestConfig);
       const data = await response.json();
-      console.log(data);
+      if (data.secure_url === undefined) {
+        toast({
+          title: "Failed to Add Hospital.",
+          description: "Image is required.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       const hospital = {
         name: fullNames,
         phone: phone,
@@ -136,6 +169,7 @@ const AddManager = () => {
         password: password,
         city: city,
       };
+
       const res = await fetch(
         "http://localhost:3000/api/admin/registerHospital",
         {
@@ -146,12 +180,26 @@ const AddManager = () => {
           body: JSON.stringify(hospital),
         }
       );
-      setDoctor((doctor) => !doctor);
-      if (res.status === 201) {
-        alert("Hospital added successfully");
-      }
+
+      const result = await res.json();
+      console.log(result);
+      toast({
+        title: "Hospital Added.",
+        description: "Hospital has been added successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      getSpecialityData();
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Failed to Add Hospital.",
+        description: "Failed to add hospital.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -162,7 +210,7 @@ const AddManager = () => {
       const newData = specialityData.filter((hospital) => {
         return hospital.name.toLowerCase().includes(text.toLowerCase());
       });
-      setSpecialityData(newData);
+      setTemp(newData);
     }
   };
   return (
@@ -374,20 +422,67 @@ const AddManager = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6} display={"flex"} flexDirection={"column"} gap={5}>
+            <HStack justifyContent={"center"}>
+              <Flex
+                height={"250px"}
+                bg={"gray"}
+                w={"full"}
+                rounded={"md"}
+                justifyContent={"end"}
+                alignItems={"end"}
+                bgImage={background ? `url(${background})` : EditData.image}
+                bgPos={"center"}
+                bgSize={"cover"}
+              >
+                <Flex
+                  position={"relative"}
+                  width={"full"}
+                  height={"full"}
+                  bg={"rgba(0,0,0,0.2)"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  transition={"all 0.3s ease-in-out"}
+                  opacity={"0"}
+                  _hover={{
+                    opacity: "1",
+                    bg: background
+                      ? "rgba(255,255, 255, 0.2)"
+                      : "rgba(0,0,0,0.2)",
+                    transition: "all 0.3s ease-in-out",
+                  }}
+                  cursor={"pointer"}
+                >
+                  <BiImageAdd size={"28px"} />
+                  <Input
+                    type={"file"}
+                    position={"absolute"}
+                    height={"100%"}
+                    width={"100%"}
+                    opacity={"0"}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      const fullPath = URL.createObjectURL(file);
+                      setBackground(fullPath);
+                      setImage(file);
+                    }}
+                    required
+                  />
+                </Flex>
+              </Flex>
+            </HStack>
             <HStack>
               <FormControl isRequired>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Hospital Name</FormLabel>
                 <Input
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        name: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }));
                   }}
                   placeholder="Enter full name"
-                  value={doctorData?.name}
+                  required
+                  value={EditData.name}
                 />
               </FormControl>
 
@@ -396,89 +491,96 @@ const AddManager = () => {
                 <Input
                   placeholder="Enter your number"
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        phone: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }));
                   }}
-                  value={doctorData?.phone}
+                  required
+                  value={EditData.phone}
                 />
               </FormControl>
             </HStack>
             <HStack>
               <FormControl isRequired>
-                <FormLabel> NMC Number</FormLabel>
+                <FormLabel> Email </FormLabel>
                 <Input
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        NMC: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }));
                   }}
-                  placeholder="Enter your NMC no"
-                  value={doctorData?.NMC}
+                  placeholder="Enter Email"
+                  required
                 />
               </FormControl>
 
               <FormControl mt={4} isRequired>
-                <FormLabel>Experience Year</FormLabel>
+                <FormLabel>Address</FormLabel>
                 <Input
-                  placeholder="Enter your experienced year"
+                  placeholder="Enter Address"
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        experience: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      address: e.target.value,
+                    }));
                   }}
-                  value={doctorData?.experience}
+                  required
                 />
               </FormControl>
             </HStack>
             <HStack>
               <FormControl isRequired>
-                <FormLabel>Speciality</FormLabel>
-                <Select
-                  placeholder="Select option"
-                  bg={"white"}
+                <FormLabel> Latitude </FormLabel>
+                <Input
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        speciality: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      latitude: e.target.value,
+                    }));
                   }}
-                  value={doctorData?.speciality}
-                >
-                  {specailityHospital.map((item) => {
-                    return (
-                      <option key={item.name} value={item.name}>
-                        {item.name}
-                      </option>
-                    );
-                  })}
-                </Select>
+                  placeholder="Enter Location Latitude"
+                  required
+                />
               </FormControl>
 
               <FormControl mt={4} isRequired>
-                <FormLabel>Qualification</FormLabel>
+                <FormLabel>Longitude</FormLabel>
                 <Input
-                  placeholder="Enter your qualification"
+                  placeholder="Enter  Location Longitude"
                   onChange={(e) => {
-                    setDoctorData(() => {
-                      return {
-                        ...doctorData,
-                        qualification: e.target.value,
-                      };
-                    });
+                    setEditData((prev) => ({
+                      ...prev,
+                      longitude: e.target.value,
+                    }));
                   }}
-                  value={doctorData?.qualification}
+                  required
+                />
+              </FormControl>
+            </HStack>
+            <HStack>
+              <FormControl isRequired>
+                <FormLabel> City </FormLabel>
+                <Input
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                  }}
+                  placeholder="Enter City"
+                  required
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel> Password </FormLabel>
+                <Input
+                  onChange={(e) => {
+                    setEditData((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }));
+                  }}
+                  placeholder="Enter Password"
+                  required
                 />
               </FormControl>
             </HStack>
@@ -530,23 +632,6 @@ const AddManager = () => {
       >
         <Flex my={50} w={"full"} justifyContent={"space-between"} gap={5}>
           <Flex w={"full"} gap={2}>
-            <Flex w={"250px"}>
-              <Select
-                placeholder="Select option"
-                bg={"white"}
-                onChange={(e) => {
-                  onChangeHandler(e.currentTarget.value);
-                }}
-              >
-                {specailityHospital.map((item) => {
-                  return (
-                    <option key={item.id} value={item.name}>
-                      {item.name}
-                    </option>
-                  );
-                })}
-              </Select>
-            </Flex>
             <Flex w={"700px"}>
               <InputGroup bg={"white"} rounded={"md"}>
                 <InputLeftElement
@@ -619,8 +704,8 @@ const AddManager = () => {
               Actions
             </chakra.span>
           </SimpleGrid>
-          {specialityData !== null ? (
-            specialityData.map((token, tid) => {
+          {temp !== null ? (
+            temp.map((token, tid) => {
               console.log(token);
               return (
                 <Flex
@@ -660,21 +745,12 @@ const AddManager = () => {
                     >
                       <ButtonGroup variant="solid" size="sm" spacing={3}>
                         <IconButton
-                          colorScheme="green"
-                          icon={<AiFillEdit />}
-                          aria-label="Edit"
-                          onClick={() => {
-                            getDoctorData(token._id);
-                            onEditOpen();
-                          }}
-                        />
-                        <IconButton
                           colorScheme="red"
                           variant="outline"
                           icon={<BsFillTrashFill />}
                           aria-label="Delete"
                           onClick={() => {
-                            deleteDoctor(token._id);
+                            deleteHospital(token._id);
                           }}
                         />
                       </ButtonGroup>

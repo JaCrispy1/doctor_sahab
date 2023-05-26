@@ -69,6 +69,20 @@ const Speciality = () => {
           </InputGroup>
         </Flex>
         <Flex wrap={"wrap"} w={"80%"} justifyContent={"start"} gap={16}>
+          {special.length === 0 && (
+            <Flex
+              fontWeight={"600"}
+              fontSize={"18px"}
+              height={"400px"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              color={"gray.400"}
+              w={"full"}
+            >
+              {" "}
+              No Speciality Found{" "}
+            </Flex>
+          )}
           {special.map((special) => (
             <SpecialityCard
               key={special.id}

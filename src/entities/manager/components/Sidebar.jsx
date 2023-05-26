@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   IconButton,
   Avatar,
@@ -48,7 +48,21 @@ const LinkItems = [
 ];
 
 export default function Sidebar(props) {
-  const naigate = useNavigate();
+  const [managerData, setManagerData] = useState();
+
+  const fetchManagerData = async () => {
+    const manager = localStorage.getItem("manager");
+    const data = await fetch(
+      `http://localhost:3000/api/manager/getManagerData/${manager}`
+    );
+    const response = await data.json();
+    setManagerData(response.hospital);
+  };
+
+  useEffect(() => {
+    fetchManagerData();
+  }, [props.updateManager]);
+  const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   return (
     <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
@@ -70,7 +84,7 @@ export default function Sidebar(props) {
         </DrawerContent>
       </Drawer>
       {/* mobilenav */}
-      <MobileNav onOpen={onOpen} />
+      <MobileNav onOpen={onOpen} hospitalData={managerData} />
       <Box ml={{ base: 0, md: 60 }} p="4">
         <Outlet />
       </Box>
@@ -139,7 +153,7 @@ const NavItem = ({ icon, children, ...rest }) => {
   );
 };
 
-const MobileNav = ({ onOpen, ...rest }) => {
+const MobileNav = ({ onOpen, hospitalData, ...rest }) => {
   const navigate = useNavigate();
   return (
     <Flex
@@ -171,12 +185,6 @@ const MobileNav = ({ onOpen, ...rest }) => {
       </Text>
 
       <HStack spacing={{ base: "0", md: "6" }}>
-        <IconButton
-          size="lg"
-          variant="ghost"
-          aria-label="open menu"
-          icon={<FiBell />}
-        />
         <Flex alignItems={"center"}>
           <Menu>
             <MenuButton
@@ -184,16 +192,16 @@ const MobileNav = ({ onOpen, ...rest }) => {
               transition="all 0.3s"
               _focus={{ boxShadow: "none" }}
             >
-              <HStack>
-                <Avatar size={"sm"} />
+              <HStack display={"flex"} alignItems={"center"}>
+                <Avatar size={"sm"} src={hospitalData?.image} />
                 <VStack
                   display={{ base: "none", md: "flex" }}
                   alignItems="flex-start"
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="xs" color="gray.600">
-                    {"Manager"}
+                  <Text fontSize="md" color="gray.600" fontWeight={"600"}>
+                    {hospitalData?.name}
                   </Text>
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
@@ -205,6 +213,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
               bg={useColorModeValue("white", "gray.900")}
               borderColor={useColorModeValue("gray.200", "gray.700")}
             >
+              <MenuItem
+                onClick={() => {
+                  navigate("/manager/profile");
+                }}
+              >
+                Profile
+              </MenuItem>
               <MenuItem
                 onClick={() => {
                   localStorage.removeItem("manager");

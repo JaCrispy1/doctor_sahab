@@ -16,6 +16,7 @@ import { ReactNode } from "react";
 import { FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { BiMailSend } from "react-icons/bi";
 import logo from "../../../assets/logo.png";
+import { useNavigate, NavLink } from "react-router-dom";
 
 const Logo = (props) => {
   return (
@@ -38,6 +39,7 @@ const Logo = (props) => {
 };
 
 const SocialButton = ({ children, label, href }) => {
+  const navigate = useNavigate();
   return (
     <chakra.button
       bg={useColorModeValue("blackAlpha.100", "whiteAlpha.100")}
@@ -102,10 +104,18 @@ export default function Footer() {
           </Stack>
           <Stack align={"flex-start"}>
             <ListHeader>Doctor Sahab</ListHeader>
-            <Link href={"#"}>Home</Link>
-            <Link href={"#"}>Explore</Link>
-            <Link href={"#"}>Find Hospital</Link>
-            <Link href={"#"}>General Query</Link>
+            <Link as={NavLink} to="/">
+              Home
+            </Link>
+            <Link as={NavLink} to="/about">
+              Explore
+            </Link>
+            <Link as={NavLink} to="/find">
+              Find Hospital
+            </Link>
+            <Link as={NavLink} to="/query">
+              General Query
+            </Link>
           </Stack>
           <Stack align={"flex-start"}>
             <ListHeader>Support</ListHeader>

@@ -40,10 +40,10 @@ export default function VerifyEmailForm() {
       const data = await response.data;
       console.log(data);
       if (data.message === "SUCCESS") {
-        console.log(data);
-        setError(false);
         localStorage.setItem("phone", value);
+        localStorage.setItem("user", JSON.stringify(data.user));
         navigate("/", { replace: true });
+        setError(false);
       } else {
         setError(true);
       }

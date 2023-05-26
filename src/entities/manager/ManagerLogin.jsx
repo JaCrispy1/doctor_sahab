@@ -21,6 +21,7 @@ import {
   useDisclosure,
   Center,
   Divider,
+  useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
@@ -34,6 +35,7 @@ export default function ManagerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const toast = useToast();
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -69,14 +71,30 @@ export default function ManagerLogin() {
         body: JSON.stringify({ email, password, otp }),
       });
       const data = await response.json();
-      console.log(data);
+
       if (data.message === "Login Successful") {
         console.log(data.token);
         localStorage.setItem("manager", data.hospital._id);
         navigate("/manager");
       }
+      if (data.message === "Invalid Credentials") {
+        toast({
+          title: "Invalid Credintials.",
+          description: "Unable to login",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Invalid Credintials.",
+        description: "Unable to login",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
     }
   };
 

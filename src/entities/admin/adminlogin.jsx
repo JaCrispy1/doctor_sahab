@@ -48,8 +48,7 @@ export default function AdminLogin() {
       );
       if (response.status === 200) {
         const data = await response.json();
-        console.log(data);
-        localStorage.setItem("admin", data);
+        localStorage.setItem("admin", username);
         navigate("/admin");
       }
     } catch (err) {

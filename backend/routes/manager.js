@@ -5,6 +5,9 @@ const Doctor = require("../model/Doctor");
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 const MailOtp = require("../model/MailOtp");
+const { Manager } = require("socket.io-client");
+const hospital = require("../model/Hospital");
+const History = require("../model/History");
 
 // router.post("/createHospital", async (req, res) => {
 //   const { name, phone, speciality, city, address } = req.body;
@@ -81,6 +84,40 @@ router.get("/addSpeciality/:hospital", async (req, res) => {
   }
 });
 
+router.patch("/editSpeciality", async (req, res) => {
+  const { hospitalId, name, description } = req.body;
+  try {
+    const hospital = await Hospital.findOne({ _id: ObjectId(hospitalId) });
+    if (!hospital) {
+      return res.status(400).json({ message: "Hospital not found" });
+    }
+    hospital.speciality.name = name;
+    hospital.speciality.description = description;
+    await hospital.save();
+    res.status(200).json({ message: "Speciality Updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.delete("/delete", async (req, res) => {
+  const { hospitalId, name } = req.body;
+  try {
+    const hospital = await Hospital.findOneAndDelete({
+      _id: ObjectId(hospitalId),
+      name: name,
+    });
+    if (!hospital) {
+      return res.status(400).json({ message: "Hospital not found" });
+    }
+    return res.status(200).json({ message: "Speciality Deleted" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 router.post("/createDoctor", async (req, res) => {
   console.log(req.body);
   const {
@@ -93,6 +130,7 @@ router.post("/createDoctor", async (req, res) => {
     hospital,
     available,
     fees,
+    image,
   } = req.body;
   if (
     !name ||
@@ -103,7 +141,8 @@ router.post("/createDoctor", async (req, res) => {
     !qualification ||
     !hospital ||
     !available ||
-    !fees
+    !fees ||
+    !image
   ) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
@@ -117,6 +156,7 @@ router.post("/createDoctor", async (req, res) => {
     hospital: hospital,
     fees: fees,
     available: available,
+    image: image,
   });
   try {
     await newDoctor.save();
@@ -178,6 +218,7 @@ router.patch("/updateDoctor/:id", async (req, res) => {
       speciality: req.body.speciality,
       qualification: req.body.qualification,
       hospital: req.body.hospital,
+      image: req.body.image,
     });
 
     console.log(doctor);
@@ -243,11 +284,10 @@ router.get("/getHospitalSpeciality/:id", async (req, res) => {
   }
 });
 
-router.patch("/updateHospitalSpeciality/:id", async (req, res) => {
-  const id = req.params.id;
-  const { hospitalId, name, description } = req.body;
+router.patch("/updateHospitalSpeciality", async (req, res) => {
+  const { hospitalId, name, description, id } = req.body;
   try {
-    const hospital = await Hospital.findOne({ _id: ObjectId(hospitalId) });
+    const hospital = await Hospital.findOne({ _id: hospitalId });
     if (!hospital) {
       return res.status(400).json({ message: "Hospital not found" });
     }
@@ -352,6 +392,79 @@ router.post("/login", async (req, res) => {
     return res
       .status(200)
       .json({ message: "Login Successful", hospital: hospital });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.get("/getManagerData/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const hospital = await Hospital.findOne({ _id: id });
+    console.log(hospital);
+    if (!hospital) {
+      return res.status(400).json({ message: "Hospital not found" });
+    }
+    res.status(200).send({ message: "Data Fetched", hospital: hospital });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.patch("/updateManagerData", async (req, res) => {
+  const { id, name, email, phone, address, city, password, image } = req.body;
+  console.log(id);
+  try {
+    const manager = await hospital.findOne({ _id: id });
+    if (!manager) {
+      return res.status(400).json({ message: "Manager not found" });
+    }
+    manager.name = name;
+    manager.email = email;
+    manager.phone = phone;
+    manager.address = address;
+    manager.city = city;
+    manager.password = password;
+    if (image) {
+      manager.image = image;
+    }
+    await manager.save();
+    res.status(200).json({ message: "Manager Updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.get("/getHistoryData/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const history = await History.find({ hospital: id, status: "Pending" });
+    if (!history) {
+      return res.status(400).json({ message: "History not found" });
+    }
+
+    console.log(history);
+    res.status(200).send({ message: "Data Fetched", history: history });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+router.patch("/updateHistoryData", async (req, res) => {
+  const { id, status } = req.body;
+  try {
+    const history = await History.findOne({ _id: id });
+    console.log(history);
+    if (!history) {
+      return res.status(400).json({ message: "History not found" });
+    }
+    history.status = status;
+    await history.save();
+    res.status(200).json({ message: "History Updated" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });

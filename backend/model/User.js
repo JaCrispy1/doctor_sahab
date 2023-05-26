@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema({
     min: 6,
     max: 255,
   },
+  emergencyContact: {
+    type: String,
+    default: "",
+    min: 10,
+    max: 10,
+  },
   phone: {
     type: String,
     required: true,
@@ -31,10 +37,21 @@ const userSchema = new mongoose.Schema({
     min: 6,
     max: 255,
   },
-
   date: {
     type: Date,
     default: Date.now,
+  },
+  profile: {
+    type: String,
+    default: "",
+  },
+  address: {
+    type: String,
+    default: "",
+  },
+  blood: {
+    type: String,
+    default: "",
   },
 });
 

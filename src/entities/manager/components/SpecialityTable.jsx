@@ -29,6 +29,7 @@ import {
   HStack,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { AiFillEdit } from "react-icons/ai";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -36,124 +37,7 @@ import { SearchIcon } from "@chakra-ui/icons";
 
 const SpecailityTable = () => {
   const id = localStorage.getItem("manager");
-  const data = [
-    {
-      name: "Daggy",
-      created: "7 years ",
-      speciality: "Cardiology",
-    },
-    {
-      name: "Anubra",
-      created: "10 years",
-      speciality: "Neurology",
-    },
-    {
-      name: "Josef",
-      created: "20 years",
-      speciality: "Gastroenterology",
-    },
-    {
-      name: "Sage",
-      created: "5 years",
-      speciality: "Neurology",
-    },
-  ];
-  const speciality = [
-    {
-      id: 1,
-      name: "Cardiology",
-      description:
-        "Cardiology is a branch of medicine dealing with disorders of the heart as well as parts of the circulatory system.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 2,
-      name: "Neurology",
-      description:
-        "Neurology is a branch of medicine dealing with disorders of the nervous system.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 3,
-      name: "Gastroenterology",
-      description:
-        "Gastroenterology is a branch of medicine focused on the digestive system and its disorders.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 4,
-      name: "Dermatology",
-      description:
-        "Dermatology is a branch of medicine dealing with the skin, nails, hair and its diseases.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 5,
-      name: "Oncology",
-      description: "Oncology is a branch of medicine that deals with cancer.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 6,
-      name: "Ophthalmology",
-      description:
-        "Ophthalmology is a branch of medicine and surgery which deals with the anatomy, physiology and diseases of the eye.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 7,
-      name: "Orthopedics",
-      description:
-        "Orthopedics is a branch of surgery concerned with conditions involving the musculoskeletal system.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 8,
-      name: "Urology",
-      descption:
-        "Urology is a branch of medicine that deals with the urinary tracts of males and females, and the reproductive system of males.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 9,
-      name: "Pediatrics",
-      description: "Pediatrics is a branch of medicine dealing with children.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 10,
-      name: "Psychiatry",
-      description:
-        "Psychiatry is the medical specialty devoted to the diagnosis, prevention, study, and treatment of mental disorders.",
-      image:
-        " https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 11,
-      name: "Gynecology",
-      description: "",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-    {
-      id: 12,
-      name: "Endocrinology",
-      description:
-        "Endocrinology is a branch of medicine dealing with the endocrine system, its diseases, and its specific secretions known as hormones.",
-      image:
-        "https://www.heart.org/-/media/images/heart/conditions/cardiovascular-disease/cardiovascular-disease-condition-cardiolo",
-    },
-  ];
-
+  const toast = useToast();
   const bg = useColorModeValue("white", "gray.800");
   const bg2 = useColorModeValue("white", "gray.800");
   const bg3 = useColorModeValue("gray.100", "gray.700");
@@ -216,6 +100,7 @@ const SpecailityTable = () => {
   };
 
   const deleteHospitalSpeciality = async (id) => {
+    const manager = localStorage.getItem("manager");
     await fetch(
       `http://localhost:3000/api/manager/deleteHospitalSpeciality/${id}`,
       {
@@ -223,28 +108,43 @@ const SpecailityTable = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ hospitalId: id }),
+        body: JSON.stringify({ hospitalId: manager }),
       }
     )
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
         setDoctor((doctor) => !doctor);
+        toast({
+          title: "Speciality Deleted.",
+          description: "Speciality Deleted Successfully",
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
       })
       .catch((err) => {
         console.log(err);
+        toast({
+          title: "Speciality Not Deleted.",
+          description: "Speciality Not Deleted Successfully",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
       });
   };
 
   const editHospitalSpeciality = async (id) => {
+    const manager = localStorage.getItem("manager");
     const data = {
-      hospitalId: id,
+      hospitalId: manager,
       name: editDoctor.name,
+      id: id,
       description: editDoctor.description,
     };
     try {
       const res = await fetch(
-        `http://localhost:3000/api/manager/updateHospitalSpeciality/${id}`,
+        `http://localhost:3000/api/manager/updateHospitalSpeciality`,
         {
           method: "PATCH",
           headers: {
@@ -253,22 +153,25 @@ const SpecailityTable = () => {
           body: JSON.stringify(data),
         }
       );
+      const result = await res.json();
+      toast({
+        title: "Speciality Updated.",
+        description: "Speciality Updated Successfully",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
       setDoctor((doctor) => !doctor);
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Speciality Not Updated.",
+        description: "Speciality Not Updated Successfully",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
     }
-  };
-
-  const onChangeHandler = (text) => {
-    setSearch(text);
-    // if (!text) {
-    //   setDoctor((doctor) => !doctor);
-    // }
-    // setSpecialityData(
-    // specialityData.filter((item) =>
-    //     item.speciality.toLowerCase().includes(text.toLowerCase())
-    //   )
-    // );
   };
 
   const onSearchHandler = (text) => {

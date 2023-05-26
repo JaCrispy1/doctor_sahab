@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import homeBackground from "../../assets/home-bg.png";
 import { motion } from "framer-motion";
+
 const Home = () => {
   const [user, setUser] = useState(localStorage.getItem("phone"));
   const navigate = useNavigate();
@@ -64,6 +65,9 @@ const Home = () => {
               color={"white"}
               _hover={{
                 bg: "#a785e4",
+              }}
+              onClick={() => {
+                navigate("/find");
               }}
             >
               Book An Appointment

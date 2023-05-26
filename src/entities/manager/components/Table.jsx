@@ -28,12 +28,15 @@ import {
   FormLabel,
   HStack,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { AiFillEdit } from "react-icons/ai";
 import { BsFillTrashFill } from "react-icons/bs";
 import { SearchIcon } from "@chakra-ui/icons";
+import { BiImageAdd } from "react-icons/bi";
 
 const TableDoctor = () => {
+  const toast = useToast();
   const id = localStorage.getItem("manager");
   console.log(id);
   const bg = useColorModeValue("white", "gray.800");
@@ -53,10 +56,13 @@ const TableDoctor = () => {
   const [special, setSpeciality] = useState("");
   const [qualification, setQualification] = useState("");
   const [specialityData, setSpecialityData] = useState([]);
+  const [temp, setTemp] = useState([]);
   const [doctor, setDoctor] = useState(null);
   const [doctorData, setDoctorData] = useState(null);
   const [specailityHospital, setSpecialityHospital] = useState([]);
   const [fees, setFees] = useState("");
+  const [background, setBackground] = useState("");
+  const [image, setImage] = useState("");
 
   useEffect(() => {
     const getSpecialityData = async () => {
@@ -65,6 +71,7 @@ const TableDoctor = () => {
         .then((data) => {
           console.log(data);
           setSpecialityData(data.doctors);
+          setTemp(data.doctors);
         })
         .catch((err) => {
           console.log(err);
@@ -93,14 +100,14 @@ const TableDoctor = () => {
 
   const onChangeHandler = (text) => {
     setSearch(text);
-    // if (!text) {
-    //   setDoctor((doctor) => !doctor);
-    // }
-    // setSpecialityData(
-    // specialityData.filter((item) =>
-    //     item.speciality.toLowerCase().includes(text.toLowerCase())
-    //   )
-    // );
+    if (text === "") {
+      setDoctor((doctor) => !doctor);
+    }
+    setSpecialityData(
+      temp.filter((speciality) =>
+        speciality.speciality.toLowerCase().includes(text.toLowerCase())
+      )
+    );
   };
 
   const getDoctorData = async (doctorId) => {
@@ -116,20 +123,34 @@ const TableDoctor = () => {
     }
   };
 
+  const uploadImage = async (requestConfig, formdata) => {
+    const response = await fetch(requestConfig.url, requestConfig);
+    const data = await response.json();
+    return data.secure_url;
+  };
+
   const editDoctor = async (doctorId) => {
-    console.log(doctorId);
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("upload_preset", "lef6u6wv");
+    const requestConfig = {
+      url: `https://api.cloudinary.com/v1_1/ddrleopwg/image/upload`,
+      method: "POST",
+      body: formData,
+    };
+    const data = await uploadImage(requestConfig, formData);
     const doctor = {
       hospital: id,
       name: doctorData.name,
       phone: doctorData.phone,
       nmc: doctorData.nmc,
-      experience: doctorData.experience,
+      experience: `${doctorData.experience.split(" ")[0]} years`,
       speciality: doctorData.speciality,
       qualification: doctorData.qualification,
       fees: doctorData.fees,
+      image: data,
     };
 
-    console.log(doctor);
     try {
       await fetch(
         `http://localhost:3000/api/manager/updateDoctor/${doctorId}`,
@@ -141,10 +162,21 @@ const TableDoctor = () => {
           body: JSON.stringify(doctor),
         }
       );
-
+      toast({
+        title: "Doctor Updated",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       setDoctor((doctor) => !doctor);
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Doctor Not Updated",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -156,21 +188,43 @@ const TableDoctor = () => {
           method: "DELETE",
         }
       );
+      toast({
+        title: "Doctor Deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       setDoctor((doctor) => !doctor);
     } catch (err) {
       console.log(err);
+      toast({
+        title: "Failed to Delete Doctor",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
   const addDoctor = async () => {
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append("upload_preset", "lef6u6wv");
+    const requestConfig = {
+      url: `https://api.cloudinary.com/v1_1/ddrleopwg/image/upload`,
+      method: "POST",
+      body: formData,
+    };
+    const data = await uploadImage(requestConfig, formData);
     const doctor = {
       hospital: id,
-      name: fullNames,
+      name: `Dr. ${fullNames}`,
       phone: phone,
       nmc: nmc,
-      experience: experience,
+      experience: `${experience} years`,
       speciality: special,
       qualification: qualification,
+      image: data,
       fees: fees,
       available: [
         {
@@ -195,6 +249,11 @@ const TableDoctor = () => {
       .then((data) => {
         onClose();
         setDoctor((doctor) => !doctor);
+        toast({
+          title: "Doctor Added.",
+          description: "Doctor has been added successfully.",
+          status: "success",
+        });
       })
       .catch((err) => console.log(err));
   };
@@ -211,7 +270,15 @@ const TableDoctor = () => {
   };
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} size={"xl"}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size={"xl"}
+        onCloseComplete={() => {
+          setBackground("");
+          setImage("");
+        }}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader
@@ -227,6 +294,55 @@ const TableDoctor = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6} display={"flex"} flexDirection={"column"} gap={5}>
+            <HStack w={"full"} justifyContent={"center"}>
+              <Flex
+                w={"120px"}
+                height={"120px"}
+                bg={"gray"}
+                rounded={"full"}
+                justifyContent={"end"}
+                alignItems={"end"}
+                bgPos={"center"}
+                bgSize={"cover"}
+                bgImage={background ? `url(${background})` : ``}
+              >
+                <Flex
+                  position={"relative"}
+                  width={"full"}
+                  height={"full"}
+                  rounded={"full"}
+                  bg={"rgba(0,0,0,0.2)"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  transition={"all 0.3s ease-in-out"}
+                  opacity={"0"}
+                  _hover={{
+                    opacity: "1",
+                    bg: background
+                      ? "rgba(255,255, 255, 0.2)"
+                      : "rgba(0,0,0,0.2)",
+                    transition: "all 0.3s ease-in-out",
+                  }}
+                  cursor={"pointer"}
+                >
+                  <BiImageAdd size={"28px"} />
+                  <Input
+                    type={"file"}
+                    position={"absolute"}
+                    height={"100%"}
+                    width={"100%"}
+                    opacity={"0"}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      const fullPath = URL.createObjectURL(file);
+                      setBackground(fullPath);
+                      setImage(file);
+                    }}
+                  />
+                </Flex>
+              </Flex>
+            </HStack>
+
             <HStack>
               <FormControl isRequired>
                 <FormLabel>Full Name</FormLabel>
@@ -363,6 +479,58 @@ const TableDoctor = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6} display={"flex"} flexDirection={"column"} gap={5}>
+            <HStack w={"full"} justifyContent={"center"}>
+              <Flex
+                w={"120px"}
+                height={"120px"}
+                bg={"gray"}
+                rounded={"full"}
+                justifyContent={"end"}
+                alignItems={"end"}
+                bgPos={"center"}
+                bgSize={"cover"}
+                bgImage={
+                  background
+                    ? `url(${background})`
+                    : `url(${doctorData?.image})`
+                }
+              >
+                <Flex
+                  position={"relative"}
+                  width={"full"}
+                  height={"full"}
+                  rounded={"full"}
+                  bg={"rgba(0,0,0,0.2)"}
+                  justifyContent={"center"}
+                  alignItems={"center"}
+                  transition={"all 0.3s ease-in-out"}
+                  opacity={"0"}
+                  _hover={{
+                    opacity: "1",
+                    bg: background
+                      ? "rgba(255,255, 255, 0.2)"
+                      : "rgba(0,0,0,0.2)",
+                    transition: "all 0.3s ease-in-out",
+                  }}
+                  cursor={"pointer"}
+                >
+                  <BiImageAdd size={"28px"} />
+                  <Input
+                    type={"file"}
+                    position={"absolute"}
+                    height={"100%"}
+                    width={"100%"}
+                    opacity={"0"}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      const fullPath = URL.createObjectURL(file);
+                      setBackground(fullPath);
+                      setImage(file);
+                    }}
+                  />
+                </Flex>
+              </Flex>
+            </HStack>
             <HStack>
               <FormControl isRequired>
                 <FormLabel>Full Name</FormLabel>
@@ -425,7 +593,7 @@ const TableDoctor = () => {
                       };
                     });
                   }}
-                  value={doctorData?.experience}
+                  value={doctorData?.experience.split(" ")[0]}
                 />
               </FormControl>
             </HStack>
@@ -499,7 +667,7 @@ const TableDoctor = () => {
             <Button
               bg={"red.400"}
               color={"white"}
-              onClick={onClose}
+              onClick={onEditClose}
               _hover={{
                 bg: "red.500",
               }}

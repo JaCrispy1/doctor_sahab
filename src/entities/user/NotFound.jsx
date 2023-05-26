@@ -1,8 +1,12 @@
+import React from "react";
+import { Flex, Image } from "@chakra-ui/react";
+import notFound from "../../assets/notfound.jpeg";
+
 const NotFound = () => {
   return (
-    <div>
-      <h1>Not Found</h1>
-    </div>
+    <Flex justifyContent={"center"}>
+      <Image src={notFound} />
+    </Flex>
   );
 };
 

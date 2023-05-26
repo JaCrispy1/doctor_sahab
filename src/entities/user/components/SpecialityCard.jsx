@@ -1,19 +1,9 @@
-import {
-  Box,
-  Center,
-  useColorModeValue,
-  Heading,
-  Text,
-  Stack,
-  Image,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, Center, Heading, Stack, Image, Flex } from "@chakra-ui/react";
+
+import IMAGE from "../../../assets/speciality.jpeg";
 
 import { useNavigate } from "react-router-dom";
 import { SearchIcon } from "@chakra-ui/icons";
-
-const IMAGE =
-  "https://images.unsplash.com/photo-1518051870910-a46e30d9db16?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=1350&q=80";
 
 export default function SpecialityCard(props) {
   const navigate = useNavigate();
@@ -21,7 +11,12 @@ export default function SpecialityCard(props) {
   console.log(props);
 
   return (
-    <Center>
+    <Center
+      border={"1px solid"}
+      borderColor={"gray.300"}
+      p={"3"}
+      rounded={"5px"}
+    >
       <Box
         as={Flex}
         w={"full"}
@@ -54,9 +49,6 @@ export default function SpecialityCard(props) {
           <Heading fontSize={"lg"} fontFamily={"body"} fontWeight={500}>
             {props.name}
           </Heading>
-          <Text color={"gray.500"} fontSize={"sm"}>
-            {props.doctors} Doctors
-          </Text>
         </Stack>
       </Box>
     </Center>

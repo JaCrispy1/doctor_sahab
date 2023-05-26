@@ -46,7 +46,7 @@ const hospitalSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true,
+    default: "",
   },
   lat: {
     type: String,

@@ -14,6 +14,7 @@ import {
   useColorModeValue,
   HStack,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -25,7 +26,7 @@ export default function SignUp() {
   const [city, setCity] = useState("");
   const [age, setAge] = useState("");
   const [email, setEmail] = useState("");
-
+  const toast = useToast();
   const submitHandler = async (e) => {
     e.preventDefault();
     console.log(first, last, city, age, email);
@@ -53,9 +54,16 @@ export default function SignUp() {
         }
       );
       const data = await response.data;
-      console.log(data);
       if (data) {
-        navigate("/", { state: { phone: phone } });
+        toast({
+          title: "Account Created.",
+          description: "We've created your account for you.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+
+        navigate("/login");
       }
     } catch (err) {
       console.log(err);

@@ -3,10 +3,7 @@ import { useState } from "react";
 
 import {
   Flex,
-  IconButton,
-  Button,
   Stack,
-  Icon,
   useColorModeValue,
   SimpleGrid,
   chakra,
@@ -16,18 +13,8 @@ import {
   InputLeftElement,
   Input,
   Select,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  useDisclosure,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  HStack,
-  Text,
+  Button,
+  useToast,
 } from "@chakra-ui/react";
 import { AiFillEdit } from "react-icons/ai";
 import { BsFillTrashFill } from "react-icons/bs";
@@ -35,87 +22,73 @@ import { SearchIcon } from "@chakra-ui/icons";
 
 const HistoryPage = () => {
   const id = localStorage.getItem("manager");
-  console.log(id);
   const bg = useColorModeValue("white", "gray.800");
   const bg2 = useColorModeValue("white", "gray.800");
   const bg3 = useColorModeValue("gray.100", "gray.700");
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
-  const [search, setSearch] = useState(null);
-  const [fullNames, setFullNames] = useState("");
-  const [phone, setPhone] = useState("");
-  const [nmc, setNmc] = useState("");
-  const [experience, setExperience] = useState("");
-  const [special, setSpeciality] = useState("");
-  const [qualification, setQualification] = useState("");
-  const [specialityData, setSpecialityData] = useState([]);
-  const [doctor, setDoctor] = useState(null);
-  const [doctorData, setDoctorData] = useState(null);
-  const [specailityHospital, setSpecialityHospital] = useState([]);
-  const [fees, setFees] = useState("");
+
+  const [history, setHistory] = useState([]);
+  const [temp, setTemp] = useState([]);
+  const toast = useToast();
+  const getHistory = async () => {
+    await fetch(`http://localhost:3000/api/manager/getHistoryData/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setHistory(data.history);
+        setTemp(data.history);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   useEffect(() => {
-    const getSpecialityData = async () => {
-      await fetch(`http://localhost:3000/api/user/getNoticeHospital/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data);
-          setSpecialityData(data.data);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
-
-    getSpecialityData();
-  }, [doctor]);
-
-  useEffect(() => {
-    const getSpecialityData = async () => {
-      await fetch(`http://localhost:3000/api/user/getNoticeHospital/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data.data);
-          setSpecialityHospital(data.data);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
-    getSpecialityData();
+    getHistory();
   }, []);
 
-  const getDoctorData = async (doctorId) => {
-    console.log(doctorId);
-    try {
-      const doctor = await fetch(
-        `http://localhost:3000/api/manager/getDoctor/${doctorId}`
-      );
-      const doctorData = await doctor.json();
-      setDoctorData(doctorData.doctor);
-    } catch (err) {
-      console.log(err);
-    }
+  const approveHistory = async (id) => {
+    const data = { id: id, status: "Approved" };
+    await fetch("http://localhost:3000/api/manager/updateHistoryData", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        toast({
+          title: "Token Approved",
+          description: "Token Approved Successfully",
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
+        getHistory();
+      })
+      .catch((err) => {
+        console.log(err);
+        toast({
+          title: "Token Not Approved",
+          description: "Token Not Approved",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      });
   };
 
-  const deleteDoctor = async (doctorId) => {
-    try {
-      await fetch(
-        `http://localhost:3000/api/manager/deleteDoctor/${doctorId}`,
-        {
-          method: "DELETE",
-        }
-      );
-      setDoctor((doctor) => !doctor);
-    } catch (err) {
-      console.log(err);
+  const searchHistory = (search) => {
+    if (search === "") {
+      getHistory();
+    } else {
+      console.log(temp);
+      const data = temp.filter((item) => {
+        return item.token.includes(search);
+      });
+      console.log(data);
+      setHistory(data);
     }
   };
-
   return (
     <>
       <Flex
@@ -130,23 +103,6 @@ const HistoryPage = () => {
       >
         <Flex my={50} w={"full"} justifyContent={"space-between"} gap={5}>
           <Flex w={"full"} gap={2}>
-            <Flex w={"250px"}>
-              <Select
-                placeholder="Select option"
-                bg={"white"}
-                onChange={(e) => {
-                  onChangeHandler(e.currentTarget.value);
-                }}
-              >
-                {specailityHospital.map((item) => {
-                  return (
-                    <option key={item.id} value={item.name}>
-                      {item.name}
-                    </option>
-                  );
-                })}
-              </Select>
-            </Flex>
             <Flex w={"700px"}>
               <InputGroup bg={"white"} rounded={"md"}>
                 <InputLeftElement
@@ -157,7 +113,7 @@ const HistoryPage = () => {
                   type="text"
                   placeholder="Search"
                   focusBorderColor="#8c81ea"
-                  onChange={(e) => onSearchHandler(e.target.value)}
+                  onChange={(e) => searchHistory(e.target.value)}
                 />
               </InputGroup>
             </Flex>
@@ -177,7 +133,7 @@ const HistoryPage = () => {
             spacingY={3}
             columns={{
               base: 1,
-              md: 6,
+              md: 7,
             }}
             w={{
               base: 120,
@@ -187,7 +143,7 @@ const HistoryPage = () => {
             bg={bg3}
             py={{
               base: 1,
-              md: 6,
+              md: 7,
             }}
             px={{
               base: 2,
@@ -196,21 +152,25 @@ const HistoryPage = () => {
             fontSize="md"
             fontWeight="bold"
           >
-            <span>Hospital Id</span>
-            <span>Speciality Name</span>
-            <span>Phone Number</span>
+            <span>Doctor Name</span>
             <span>Token Number</span>
+            <span>Phone Number</span>
+            <span>Amount Paid (Rs)</span>
             <span>Alloted</span>
-            <chakra.span
-              textAlign={{
-                md: "right",
-              }}
-            >
-              Price
-            </chakra.span>
+            <span>Action</span>
           </SimpleGrid>
-          {specialityData !== null ? (
-            specialityData.map((token, tid) => {
+          {history.length === 0 && <Flex
+          height={"400px"}
+          justifyContent={"center"}
+          alignItems={"center"}
+          fontWeight={"600"}
+          color={"gray.400"}
+          fontSize={"18px"}
+          >
+          History has been cleared
+          </Flex>}
+          {history !== null ? (
+            history.map((token, tid) => {
               return (
                 <Flex
                   direction={{
@@ -224,20 +184,35 @@ const HistoryPage = () => {
                     spacingY={3}
                     columns={{
                       base: 1,
-                      md: 6,
+                      md: 7,
                     }}
                     w="full"
                     py={2}
                     px={5}
                     borderBottomWidth="1px"
                   >
-                    <span>{token.hospital.slice(0, 8)}</span>
-                    <span>{token.speciality}</span>
-                    <span>{token.phone}</span>
+                    <span>{token.doctor}</span>
                     <span>{token.token}</span>
+                    <span>{token.phone}</span>
+                    <span>{token.price}</span>
                     <span>{token.alloted}</span>
 
-                    <span>{token.price}</span>
+                    <span>
+                      {" "}
+                      <Button
+                        bg={"green"}
+                        color={"white"}
+                        _hover={{
+                          bg: "green.500",
+                        }}
+                        onClick={() => {
+                          console.log(token._id);
+                          approveHistory(token._id);
+                        }}
+                      >
+                        Approval
+                      </Button>
+                    </span>
                   </SimpleGrid>
                 </Flex>
               );

@@ -154,6 +154,7 @@ const AppointTable = () => {
   const id = localStorage.getItem("manager");
   const [specialityData, setSpecialityData] = useState([]);
   const [speciality, setSpeciality] = useState([]);
+  const [temp, setTemp] = useState([]);
 
   const bg = useColorModeValue("white", "gray.800");
   const bg2 = useColorModeValue("white", "gray.800");
@@ -196,6 +197,7 @@ const AppointTable = () => {
         .then((res) => res.json())
         .then((res) => {
           setSpecialityData(res.doctors);
+          setTemp(res.doctors);
         });
     };
     fetchData();
@@ -247,25 +249,19 @@ const AppointTable = () => {
   const finalRef = React.useRef(null);
   const [search, setSearch] = useState(null);
   const onChangeHandler = (text) => {
-    setSearch(text);
     setSpecialityData(
-      data.filter((item) =>
+      temp.filter((item) =>
         item.speciality.toLowerCase().includes(text.toLowerCase())
       )
     );
   };
 
   const onSearchHandler = (text) => {
-    setSpecialityData(() => {
-      if (text.length === 0 && search) {
-        return data.filter((item) =>
-          item.speciality.toLowerCase().includes(search.toLowerCase())
-        );
-      }
+    setSpecialityData((data) => {
       if (text.length === 0 && !search) {
-        return data;
+        return temp;
       }
-      return specialityData.filter((item) =>
+      return temp.filter((item) =>
         item.name.toLowerCase().includes(text.toLowerCase())
       );
     });

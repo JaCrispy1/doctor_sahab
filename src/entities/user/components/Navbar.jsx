@@ -19,9 +19,6 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
   MenuDivider,
 } from "@chakra-ui/react";
 import logo from "../../../assets/logo.png";
@@ -35,51 +32,91 @@ import { Outlet, useNavigate, Link as ToLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Footer from "./Footer";
 import { FiBell } from "react-icons/fi";
+import io from "socket.io-client";
+import { useToast } from "@chakra-ui/react";
 
-export default function Navbar() {
+const socket = io("http://localhost:3002");
+const roomId = 6969 + localStorage.getItem("phone");
+socket.emit("join-notification", roomId);
+
+export default function Navbar(props) {
   const { isOpen, onToggle } = useDisclosure();
   const [notice, setNotice] = useState([]);
-  const phone = localStorage.getItem("phone")
-    ? localStorage.getItem("phone")
-    : null;
+  const phone = localStorage.getItem("phone");
   const navigate = useNavigate();
-  const [name, setName] = useState();
+  const [userData, setUserData] = useState({});
+  const toast = useToast();
+
+  const [notifications, setNotifications] = useState([]);
+
+  const fetchNotice = async () => {
+    console.log(phone);
+    const response = await fetch(
+      `http://localhost:3000/api/user/getNotice/${phone}`
+    );
+    const data = await response.json();
+    console.log(data.notices);
+    setNotifications(data.notices ? data.notices : []);
+  };
 
   useEffect(() => {
-    if (phone === null) {
-      return;
-    }
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/user/getNotice/${phone}`
-        );
-        const data = await response.json();
-        console.log(data.data);
-        setNotice([...data.data]);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchUser();
+    socket.on("forum-notification", (data) => {
+      toast({
+        title: "New Comment in Forum",
+        description: "Someone posted in your forum",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-left",
+      });
+
+      setNotifications((prevNotifications) => {
+        // Remove the last notification
+        let updatedNotifications;
+        if (prevNotifications.length === 5) {
+          updatedNotifications = prevNotifications.slice(0, -1);
+        } else {
+          updatedNotifications = prevNotifications;
+        }
+        // Add the new notification
+        console.log(data);
+        const newNotification = {
+          user_name: data.user_name,
+          message: data.message,
+          _id: data._id,
+        };
+        const reversed = [newNotification, ...updatedNotifications];
+        return reversed;
+      });
+    });
   }, []);
 
   useEffect(() => {
-    if (phone === null) {
-      return;
+    if (phone) {
+      fetchNotice();
     }
-    const fetchUser = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/user/data/${phone}`
-        );
-        const data = await response.json();
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchUser();
-  }, []);
+  }, [phone]);
+
+  const fetchUser = async (phoneNumber) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/user/data/${phoneNumber}`
+      );
+      const data = await response.json();
+      console.log(data.user);
+      setUserData(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    console.log(phone);
+    if (phone) {
+      fetchUser(phone);
+    }
+  }, [phone, props.updated]);
 
   return (
     <>
@@ -114,7 +151,15 @@ export default function Navbar() {
             />
           </Flex>
           <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
-            <Image src={logo} w={"180px"} height={"80px"} />
+            <Image
+              src={logo}
+              w={"180px"}
+              height={"80px"}
+              cursor={"pointer"}
+              onClick={() => {
+                navigate("/");
+              }}
+            />
 
             <Flex display={{ base: "none", md: "flex" }} ml={10}>
               <DesktopNav />
@@ -128,45 +173,47 @@ export default function Navbar() {
           >
             <Menu>
               {phone !== null ? (
-                <MenuButton as={Button} rightIcon={<FiBell />} />
+                <Flex as={MenuButton}>
+                  <IconButton
+                    icon={<FiBell />}
+                    size={"md"}
+                    bg={"purple.400"}
+                    color={"white"}
+                    _hover={{
+                      bg: "purple.500",
+                      _hover: {
+                        bg: "purple.600",
+                      },
+                    }}
+                  />
+                </Flex>
               ) : (
                 <></>
               )}
-              <MenuList>
-                {notice.map((not) => (
-                  <>
-                    <Flex direction={"column"} p={5}>
-                      <Text fontSize={"lg"} fontWeight={600} ml={2}>
-                        Token : {not.token}
-                      </Text>
-                      <Text fontSize={"lg"} fontWeight={600} ml={2}>
-                        Alloted Time : {not.alloted}
-                      </Text>
-                    </Flex>
-                    <MenuDivider />
-                  </>
-                ))}
+              <MenuList py={"5"}>
+                {notifications.length === 0 && (
+                  <Flex w={"full"} justifyContent={"center"}>
+                    No Notification{" "}
+                  </Flex>
+                )}
+                {notifications.map((not, index) => {
+                  return (
+                    <>
+                      <Flex direction={"column"} px={7}>
+                        <Text fontSize={"lg"} fontWeight={600} ml={2}>
+                          {not.user_name}
+                        </Text>
+                        <Text fontSize={"lg"} fontWeight={600} ml={2}>
+                          Commented on your post
+                        </Text>
+                      </Flex>
+
+                      {index !== notifications.length - 1 && <MenuDivider />}
+                    </>
+                  );
+                })}
               </MenuList>
             </Menu>
-            <Button
-              fontSize={"16px"}
-              fontWeight={700}
-              variant={"outline"}
-              border={"1px solid"}
-              color={"#A785E4"}
-              borderColor={"#A785E4"}
-              letterSpacing={"wide"}
-              _hover={{
-                color: "purple.600",
-                borderColor: "purple.600",
-              }}
-              width={"130px"}
-              onClick={() => {
-                navigate("/contact");
-              }}
-            >
-              Contact Us
-            </Button>
 
             {phone === null && (
               <Button
@@ -187,15 +234,17 @@ export default function Navbar() {
                 Get Started
               </Button>
             )}
-
             {phone !== null && (
-              <Flex alignItems={"center"} gap={3} px={5}>
+              <Flex alignItems={"center"} gap={2} px={5}>
                 <Menu isLazy>
-                  <Flex alignItems={"center"}>
-                    <Avatar as={MenuButton} size={"md"} />
-                    <Text fontSize={"lg"} fontWeight={600} ml={2}>
-                      {" "}
-                      {name}{" "}
+                  <Flex alignItems={"center"} gap={2}>
+                    <Avatar
+                      as={MenuButton}
+                      size={"md"}
+                      src={userData.profile}
+                    />
+                    <Text fontSize={"md"} fontWeight={600}>
+                      Hi,{userData.name ? userData.name.split(" ")[0] : "User"}
                     </Text>
                   </Flex>
                   <MenuList>
@@ -211,7 +260,8 @@ export default function Navbar() {
                     <MenuItem
                       onClick={() => {
                         localStorage.removeItem("phone");
-                        navigate("/login");
+                        localStorage.removeItem("user");
+                        window.location.href = "/";
                       }}
                     >
                       Logout

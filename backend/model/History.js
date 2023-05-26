@@ -5,6 +5,14 @@ const History = mongoose.Schema({
     type: String,
     required: true,
   },
+  doctor_id: {
+    type: String,
+    required: true,
+  },
+  doctor: {
+    type: String,
+    required: true,
+  },
   price: {
     type: String,
     required: true,
@@ -18,6 +26,14 @@ const History = mongoose.Schema({
     required: true,
   },
   alloted: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    required: true,
+  },
+  hospital: {
     type: String,
     required: true,
   },

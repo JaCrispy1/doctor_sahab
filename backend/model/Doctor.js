@@ -15,6 +15,10 @@ const doctorSchema = new mongoose.Schema({
     min: 10,
     max: 10,
   },
+  image: {
+    type: String,
+    required: true,
+  },
   // create a array of speciality
   experience: {
     type: String,
